@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>آب و هوا | Weather App</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 30px 16px;
+    color: #fff;
+    transition: background 0.8s ease;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .search-bar input {
+    flex: 1;
+    padding: 14px 18px;
+    border: none;
+    border-radius: 14px;
+    font-size: 1rem;
+    outline: none;
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    backdrop-filter: blur(10px);
+  }
+
+  .search-bar input::placeholder {
+    color: rgba(255,255,255,0.65);
+  }
+
+  .search-bar button {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: background 0.2s;
+  }
+
+  .search-bar button:hover {
+    background: rgba(255,255,255,0.35);
+  }
+
+  .main-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 26px;
+    padding: 28px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .city-name {
+    font-size: 1.7rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .country {
+    text-align: center;
+    font-size: 0.85rem;
+    opacity: 0.75;
+    margin-top: 2px;
+  }
+
+  .main-temp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin: 22px 0;
+  }
+
+  .weather-icon {
+    font-size: 4.5rem;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .temp-value {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .temp-value .unit {
+    font-size: 2rem;
+    vertical-align: top;
+  }
+
+  .condition {
+    text-align: center;
+    font-size: 1.05rem;
+    opacity: 0.9;
+    margin-bottom: 22px;
+  }
+
+  .details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .detail-item {
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .detail-item .d-icon {
+    font-size: 1.5rem;
+  }
+
+  .detail-item .d-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detail-item .d-label {
+    font-size: 0.72rem;
+    opacity: 0.7;
+  }
+
+  .detail-item .d-value {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .forecast {
+    margin-top: 22px;
+  }
+
+  .forecast h3 {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 10px;
+    padding-right: 4px;
+  }
+
+  .forecast-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .forecast-row::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .forecast-row::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+  }
+
+  .forecast-day {
+    flex: 0 0 auto;
+    min-width: 74px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+
+  .forecast-day .f-name {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .forecast-day .f-icon {
+    font-size: 1.6rem;
+    margin: 6px 0;
+  }
+
+  .forecast-day .f-temp {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .forecast-day .f-temp span {
+    opacity: 0.6;
+    font-weight: 400;
+    font-size: 0.75rem;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 50px 0;
+  }
+
+  .spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid rgba(255,255,255,0.25);
+    border-top-color: #fff;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error-box {
+    background: rgba(255,80,80,0.25);
+    border: 1px solid rgba(255,120,120,0.4);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  .error-box .emoji {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 0.78rem;
+    opacity: 0.7;
+    margin-top: 18px;
+  }
+
+  @media (max-width: 400px) {
+    .temp-value { font-size: 3rem; }
+    .weather-icon { font-size: 3.5rem; }
+    .details { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="search-bar">
+    <input type="text" id="cityInput" placeholder="نام شهر را وارد کنید (مثلاً Tehran)" value="Tehran">
+    <button id="searchBtn" title="جستجو">🔍</button>
+  </div>
+
+  <div id="content">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div>در حال دریافت اطلاعات هوا...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const content = document.getElementById('content');
+  const cityInput = document.getElementById('cityInput');
+  const searchBtn = document.getElementById('searchBtn');
+
+  // کد وضعیت هوا → آیکون و توضیح فارسی
+  const weatherMap = {
+    0:  { icon: '☀️', text: 'آسمان صاف' },
+    1:  { icon: '🌤️', text: 'عمدتاً صاف' },
+    2:  { icon: '⛅', text: 'نیمه ابری' },
+    3:  { icon: '☁️', text: 'ابری' },
+    45: { icon: '🌫️', text: 'مه' },
+    48: { icon: '🌫️', text: 'مه یخ‌زده' },
+    51: { icon: '🌦️', text: 'نم‌نم باران سبک' },
+    53: { icon: '🌦️', text: 'نم‌نم باران' },
+    55: { icon: '🌧️', text: 'نم‌نم باران شدید' },
+    61: { icon: '🌧️', text: 'باران سبک' },
+    63: { icon: '🌧️', text: 'باران' },
+    65: { icon: '⛈️', text: 'باران شدید' },
+    71: { icon: '🌨️', text: 'برف سبک' },
+    73: { icon: '🌨️', text: 'برف' },
+    75: { icon: '❄️', text: 'برف شدید' },
+    77: { icon: '❄️', text: 'دانه‌های برف' },
+    80: { icon: '🌦️', text: 'رگبار سبک' },
+    81: { icon: '🌧️', text: 'رگبار' },
+    82: { icon: '⛈️', text: 'رگبار شدید' },
+    85: { icon: '🌨️', text: 'رگبار برف' },
+    86: { icon: '❄️', text: 'رگبار برف شدید' },
+    95: { icon: '⛈️', text: 'رعد و برق' },
+    96: { icon: '⛈️', text: 'رعد و برق با تگرگ' },
+    99: { icon: '⛈️', text: 'رعد و برق شدید با تگرگ' }
+  };
+
+  // پس‌زمینه بر اساس وضعیت هوا
+  const bgGradients = {
+    clear: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)',
+    clouds: 'linear-gradient(135deg, #4b6cb7 0%, #182848 100%)',
+    rain: 'linear-gradient(135deg, #373b44 0%, #4286f4 100%)',
+    snow: 'linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%)',
+    thunder: 'linear-gradient(135deg, #2c3e50 0%, #4a00e0 100%)',
+    mist: 'linear-gradient(135deg, #606c88 0%, #3f4c6b 100%)',
+    default: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)'
+  };
+
+  function getBg(code) {
+    if (code === 0 || code === 1) return bgGradients.clear;
+    if (code === 2 || code === 3) return bgGradients.clouds;
+    if (code >= 51 && code <= 65) return bgGradients.rain;
+    if (code >= 71 && code <= 86) return bgGradients.snow;
+    if (code >= 95) return bgGradients.thunder;
+    if (code === 45 || code === 48) return bgGradients.mist;
+    return bgGradients.default;
+  }
+
+  const persianDays = ['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه','شنبه'];
+
+  function showLoading() {
+    content.innerHTML = `<div class="loading">
+      <div class="spinner"></div>
+      <div>در حال دریافت اطلاعات هوا...</div>
+    </div>`;
+  }
+
+  function showError(msg) {
+    content.innerHTML = `<div class="error-box">
+      <span class="emoji">😕</span>
+      ${msg}
+    </div>`;
+    document.body.style.background = bgGradients.default;
+  }
+
+  async function searchWeather(city) {
+    if (!city.trim()) return;
+    showLoading();
+
+    try {
+      // مرحله ۱: پیدا کردن مختصات شهر
+      const geoRes = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=fa&format=json`
+      );
+      const geoData = await geoRes.json();
+
+      if (!geoData.results || geoData.results.length === 0) {
+        showError(`شهری با نام «${city}» پیدا نشد. املای آن را بررسی کنید.`);
+        return;
+      }
+
+      const place = geoData.results[0];
+      const { latitude, longitude, name, country, admin1 } = place;
+
+      // مرحله ۲: دریافت اطلاعات هوا
+      const weatherRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+        `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,pressure_msl` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+        `&timezone=auto&forecast_days=7`
+      );
+      const weatherData = await weatherRes.json();
+
+      renderWeather(weatherData, { name, country, admin1 });
+    } catch (err) {
+      showError('خطا در اتصال به اینترنت یا سرور. دوباره تلاش کنید.');
+      console.error(err);
+    }
+  }
+
+  function renderWeather(data, place) {
+    const cur = data.current;
+    const daily = data.daily;
+    const code = cur.weather_code;
+    const info = weatherMap[code] || { icon: '🌡️', text: 'نامشخص' };
+
+    // تغییر پس‌زمینه
+    document.body.style.background = getBg(code);
+
+    const locationText = [place.name, place.admin1, place.country].filter(Boolean).join('، ');
+
+    // پیش‌بینی ۷ روزه
+    let forecastHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(daily.time[i]);
+      const dayName = i === 0 ? 'امروز' : persianDays[d.getDay()];
+      const dCode = daily.weather_code[i];
+      const dInfo = weatherMap[dCode] || { icon: '🌡️' };
+      const maxT = Math.round(daily.temperature_2m_max[i]);
+      const minT = Math.round(daily.temperature_2m_min[i]);
+      forecastHTML += `
+        <div class="forecast-day">
+          <div class="f-name">${dayName}</div>
+          <div class="f-icon">${dInfo.icon}</div>
+          <div class="f-temp">${maxT}° <span>${minT}°</span></div>
+        </div>`;
+    }
+
+    content.innerHTML = `
+      <div class="main-card">
+        <div class="city-name">${place.name}</div>
+        <div class="country">${locationText}</div>
+
+        <div class="main-temp">
+          <div class="weather-icon">${info.icon}</div>
+          <div class="temp-value">${Math.round(cur.temperature_2m)}<span class="unit">°C</span></div>
+        </div>
+
+        <div class="condition">${info.text}</div>
+
+        <div class="details">
+          <div class="detail-item">
+            <span class="d-icon">🌡️</span>
+            <div class="d-info">
+              <span class="d-label">احساس واقعی</span>
+              <span class="d-value">${Math.round(cur.apparent_temperature)}°C</span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <span class="d-icon">💧</span>
+            <div class="d-info">
+              <span class="d-label">رطوبت</span>
+              <span class="d-value">${cur.relative_humidity_2m}%</span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <span class="d-icon">💨</span>
+            <div class="d-info">
+              <span class="d-label">سرعت باد</span>
+              <span class="d-value">${Math.round(cur.wind_speed_10m)} km/h</span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <span class="d-icon">📊</span>
+            <div class="d-info">
+              <span class="d-label">فشار هوا</span>
+              <span class="d-value">${Math.round(cur.pressure_msl)} hPa</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="forecast">
+          <h3>پیش‌بینی ۷ روز آینده</h3>
+          <div class="forecast-row">${forecastHTML}</div>
+        </div>
+      </div>
+      <div class="hint">آخرین به‌روزرسانی: ${new Date().toLocaleTimeString('fa-IR', {hour:'2-digit', minute:'2-digit'})}</div>
+    `;
+  }
+
+  searchBtn.onclick = () => searchWeather(cityInput.value);
+  cityInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') searchWeather(cityInput.value);
+  });
+
+  // بارگذاری اولیه
+  searchWeather('Tehran');
+</script>
+
+</body>
+</html>
